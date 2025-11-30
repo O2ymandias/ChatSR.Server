@@ -1,4 +1,7 @@
+using ChatSR.Api.Extensions;
 using ChatSR.Infrastructure.Data;
+using ChatSR.Infrastructure.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +15,12 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
 	var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 	opts.UseSqlServer(connectionString);
 });
+
+builder.Services
+	.AddIdentity<User, IdentityRole>()
+	.AddEntityFrameworkStores<AppDbContext>();
+
+builder.Services.AddAuthenticationServices(builder.Configuration);
 
 #endregion
 
