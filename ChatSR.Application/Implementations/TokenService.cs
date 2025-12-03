@@ -14,7 +14,7 @@ public class TokenService(IOptions<JwtOptions> jwtOptions, UserManager<User> use
 {
 	private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
-	public async Task<string> GenerateTokenAsync(User user)
+	public async Task<JwtSecurityToken> GenerateTokenAsync(User user)
 	{
 		List<Claim> claims = [
 			// [1] Registered JWT Claims
@@ -50,6 +50,7 @@ public class TokenService(IOptions<JwtOptions> jwtOptions, UserManager<User> use
 			expires: DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryInMinutes),
 			signingCredentials: signingCredentials
 		);
-		return new JwtSecurityTokenHandler().WriteToken(token);
+
+		return token;
 	}
 }

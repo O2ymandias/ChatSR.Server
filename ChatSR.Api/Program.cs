@@ -20,11 +20,14 @@ builder.Services
 	.AddIdentity<User, IdentityRole>()
 	.AddEntityFrameworkStores<AppDbContext>();
 
-builder.Services.AddAuthenticationServices(builder.Configuration);
+builder.Services.AddAppServices();
+builder.Services.AddAuthServices(builder.Configuration);
 
 #endregion
 
 var app = builder.Build();
+
+await app.InitializeDatabaseAsync();
 
 #region  Configure the HTTP request pipeline.
 

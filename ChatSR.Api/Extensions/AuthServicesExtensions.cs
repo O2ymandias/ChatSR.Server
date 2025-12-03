@@ -7,9 +7,9 @@ using System.Text;
 
 namespace ChatSR.Api.Extensions;
 
-public static class AuthenticationServicesExtensions
+public static class AuthServicesExtensions
 {
-	public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration config)
+	public static IServiceCollection AddAuthServices(this IServiceCollection services, IConfiguration config)
 	{
 		services.Configure<JwtOptions>(config.GetSection("JwtOptions"));
 		services.AddScoped<ITokenService, TokenService>();
