@@ -1,4 +1,5 @@
-﻿using ChatSR.Application.Contracts;
+﻿using ChatSR.Api.Extensions;
+using ChatSR.Application.Contracts;
 using ChatSR.Application.Dtos.AuthDtos;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,17 +10,16 @@ namespace ChatSR.Api.Controllers;
 public class AuthController(IAuthService authService) : ControllerBase
 {
 	[HttpPost("register")]
-	public async Task<ActionResult<AuthResponse>> Register(RegisterUserRequest request)
+	public async Task<IActionResult> Register(RegisterUserRequest request)
 	{
 		var result = await authService.RegisterUserAsync(request);
-		return Ok(result);
+		return result.ToActionResult();
 	}
 
 	[HttpPost("login")]
-	public async Task<ActionResult<AuthResponse>> Login(LoginUserRequest request)
+	public async Task<IActionResult> Login(LoginUserRequest request)
 	{
 		var result = await authService.LoginUserAsync(request);
-		return Ok(result);
+		return result.ToActionResult();
 	}
-
 }
