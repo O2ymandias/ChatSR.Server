@@ -1,6 +1,6 @@
 ﻿using ChatSR.Api.Extensions;
-using ChatSR.Application.Contracts;
 using ChatSR.Application.Dtos.AuthDtos;
+using ChatSR.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatSR.Api.Controllers;

@@ -1,7 +1,7 @@
 ﻿using ChatSR.Application.Dtos.AuthDtos;
 using ChatSR.Application.Shared.Results;
 
-namespace ChatSR.Application.Contracts;
+namespace ChatSR.Application.Interfaces;
 
 public interface IAuthService
 {

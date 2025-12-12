@@ -1,4 +1,4 @@
-﻿using ChatSR.Application.Contracts;
+﻿using ChatSR.Application.Interfaces;
 using ChatSR.Application.Shared.Options;
 using ChatSR.Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -8,7 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace ChatSR.Application.Implementations;
+namespace ChatSR.Application.Services;
 
 public class TokenService(IOptions<JwtOptions> jwtOptions, UserManager<User> userManager) : ITokenService
 {

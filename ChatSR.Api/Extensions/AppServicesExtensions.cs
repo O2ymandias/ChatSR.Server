@@ -1,5 +1,5 @@
-﻿using ChatSR.Application.Contracts;
-using ChatSR.Application.Implementations;
+﻿using ChatSR.Application.Interfaces;
+using ChatSR.Application.Services;
 
 namespace ChatSR.Api.Extensions;
 
@@ -9,6 +9,7 @@ public static class AppServicesExtensions
 	{
 		services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 		services.AddScoped<IAuthService, AuthService>();
+		services.AddScoped<IChatService, ChatService>();
 		return services;
 	}
 }

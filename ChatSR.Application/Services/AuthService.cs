@@ -1,5 +1,5 @@
-﻿using ChatSR.Application.Contracts;
-using ChatSR.Application.Dtos.AuthDtos;
+﻿using ChatSR.Application.Dtos.AuthDtos;
+using ChatSR.Application.Interfaces;
 using ChatSR.Application.Shared.Constants;
 using ChatSR.Application.Shared.Errors;
 using ChatSR.Application.Shared.Results;
@@ -7,7 +7,7 @@ using ChatSR.Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace ChatSR.Application.Implementations;
+namespace ChatSR.Application.Services;
 
 public class AuthService(UserManager<User> userManager, ITokenService tokenService) : IAuthService
 {

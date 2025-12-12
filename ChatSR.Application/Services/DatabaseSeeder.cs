@@ -1,9 +1,9 @@
-﻿using ChatSR.Application.Contracts;
+﻿using ChatSR.Application.Interfaces;
 using ChatSR.Application.Shared.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
-namespace ChatSR.Application.Implementations;
+namespace ChatSR.Application.Services;
 
 public class DatabaseSeeder(RoleManager<IdentityRole> roleManager, ILogger<DatabaseSeeder> logger) : IDatabaseSeeder
 {

@@ -1,4 +1,4 @@
-﻿using ChatSR.Application.Contracts;
+﻿using ChatSR.Application.Interfaces;
 using ChatSR.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

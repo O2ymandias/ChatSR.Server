@@ -1,4 +1,4 @@
-﻿namespace ChatSR.Application.Contracts;
+﻿namespace ChatSR.Application.Interfaces;
 
 public interface IDatabaseSeeder
 {

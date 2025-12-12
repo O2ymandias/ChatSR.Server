@@ -1,5 +1,5 @@
-﻿using ChatSR.Application.Contracts;
-using ChatSR.Application.Implementations;
+﻿using ChatSR.Application.Interfaces;
+using ChatSR.Application.Services;
 using ChatSR.Application.Shared.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
