@@ -2,23 +2,14 @@
 
 namespace ChatSR.Application.Shared.Results;
 
-public class Result<T>
+public class Result<T> : BaseResult
 {
 	private Result(bool isSuccess, Error? error, T? value)
+		: base(isSuccess, error)
 	{
-		if (isSuccess && error is not null)
-			throw new ArgumentException("Successful result can't have an error.");
-
-		if (!isSuccess && error is null)
-			throw new ArgumentException("Failed result must have an error.");
-
-		IsSuccess = isSuccess;
-		Error = error;
 		Value = value;
 	}
 
-	public bool IsSuccess { get; set; }
-	public Error? Error { get; set; }
 	public T? Value { get; set; }
 
 	public static Result<T> Success(T value) => new(true, null, value);

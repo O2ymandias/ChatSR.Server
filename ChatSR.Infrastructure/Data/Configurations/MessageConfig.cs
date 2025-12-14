@@ -20,5 +20,13 @@ internal class MessageConfig : IEntityTypeConfiguration<Message>
 		builder
 			.Property(m => m.SentAt)
 			.IsRequired();
+
+		builder
+			.Property(m => m.IsEdited)
+			.IsRequired();
+
+		builder
+			.Property(m => m.EditedAt)
+			.IsRequired(false);
 	}
 }

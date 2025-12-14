@@ -10,6 +10,7 @@ public static class AppServicesExtensions
 		services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 		services.AddScoped<IAuthService, AuthService>();
 		services.AddScoped<IChatService, ChatService>();
+		services.AddScoped<IMessageService, MessageService>();
 		return services;
 	}
 }

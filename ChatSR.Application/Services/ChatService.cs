@@ -30,7 +30,7 @@ public class ChatService(AppDbContext dbContext, UserManager<User> userManager) 
 		if (!request.IsGroup && memberIds.Count != 2)
 		{
 			return Result<ChatResponse>.Failure(
-				Error.Validation("Direct messages must have exactly 2 members.")
+				Error.Validation("Direct chat must have exactly 2 members.")
 			);
 		}
 
@@ -81,22 +81,21 @@ public class ChatService(AppDbContext dbContext, UserManager<User> userManager) 
 			var chatMember = new ChatMember()
 			{
 				UserId = memberId,
-				Role = memberId == currentUserId ? ChatMemberRole.Admin : ChatMemberRole.Member
+				Role = request.IsGroup
+					? memberId == currentUserId ? ChatMemberRole.Admin : ChatMemberRole.Member
+					: ChatMemberRole.Member,
 			};
 			newChat.ChatMembers.Add(chatMember);
 		}
 
 		dbContext.Chats.Add(newChat);
 
-		var rowsAffected = await dbContext.SaveChangesAsync();
+		await dbContext.SaveChangesAsync();
 
-		return rowsAffected > 0
-			? Result<ChatResponse>.Success(
-				new ChatResponse(newChat.Id, newChat.Name, newChat.IsGroup, newChat.CreatedAt)
-			)
-			: Result<ChatResponse>.Failure(
-				Error.Validation("Something went wrong while attempting to create this new chat.")
-			);
+		return Result<ChatResponse>.Success(
+			new ChatResponse(newChat.Id, newChat.Name, newChat.IsGroup, newChat.CreatedAt)
+		);
+
 	}
 
 	public async Task<Result<ChatResponse>> GetChatByIdAsync(string currentUserId, Guid chatId)
@@ -198,16 +197,7 @@ public class ChatService(AppDbContext dbContext, UserManager<User> userManager) 
 			);
 		}
 
-		var rowsAffected = await dbContext.SaveChangesAsync();
-
-		if (rowsAffected == 0)
-		{
-			return Result<ChatResponse>.Failure(
-				Error.Validation(
-					$"Something went wrong while attempting to add those members [{string.Join(", ", validUsersIds)}] to this chat '{chatId}'."
-				)
-			);
-		}
+		await dbContext.SaveChangesAsync();
 
 		return Result<ChatResponse>.Success(
 			new ChatResponse(chat.Id, chat.Name, chat.IsGroup, chat.CreatedAt)
@@ -274,23 +264,14 @@ public class ChatService(AppDbContext dbContext, UserManager<User> userManager) 
 
 		chat.ChatMembers.Remove(memberToRemove);
 
-		var rowsAffected = await dbContext.SaveChangesAsync();
-
-		if (rowsAffected == 0)
-		{
-			return Result<ChatResponse>.Failure(
-				Error.Validation(
-					$"Something went wrong while attempting to remove this member '{memberIdToRemove}' from this chat '{chatId}'."
-				)
-			);
-		}
+		await dbContext.SaveChangesAsync();
 
 		return Result<ChatResponse>.Success(
 			new ChatResponse(chat.Id, chat.Name, chat.IsGroup, chat.CreatedAt)
 		);
 	}
 
-	public async Task<Result<ChatActionResponse>> LeaveChatAsync(string currentUserId, Guid chatId)
+	public async Task<Result<bool>> LeaveChatAsync(string currentUserId, Guid chatId)
 	{
 		var chat = await dbContext.Chats
 			.Include(cm => cm.ChatMembers)
@@ -298,7 +279,7 @@ public class ChatService(AppDbContext dbContext, UserManager<User> userManager) 
 
 		if (chat is null)
 		{
-			return Result<ChatActionResponse>.Failure(
+			return Result<bool>.Failure(
 				Error.NotFound($"No chat was found with the provided ID: {chatId}")
 			);
 		}
@@ -306,7 +287,7 @@ public class ChatService(AppDbContext dbContext, UserManager<User> userManager) 
 		var member = chat.ChatMembers.FirstOrDefault(cm => cm.UserId == currentUserId);
 		if (member is null)
 		{
-			return Result<ChatActionResponse>.Failure(
+			return Result<bool>.Failure(
 				Error.NotFound($"The user '{currentUserId}' is not a member of this chat.")
 			);
 		}
@@ -322,17 +303,18 @@ public class ChatService(AppDbContext dbContext, UserManager<User> userManager) 
 		}
 
 		dbContext.ChatMembers.Remove(member);
-		var rowsAffected = await dbContext.SaveChangesAsync();
 
-		if (rowsAffected == 0)
-		{
-			return Result<ChatActionResponse>.Failure(
-				Error.Validation($"Something went wrong while attempting to leave this chat '{chatId}'.")
+		await dbContext.SaveChangesAsync();
+
+		return Result<bool>.Success(true);
+	}
+
+	public async Task<bool> IsChatMemberAsync(string currentUserId, Guid chatId)
+	{
+		return await dbContext.ChatMembers.
+			AnyAsync(cm =>
+				cm.ChatId == chatId &&
+				cm.UserId == currentUserId
 			);
-		}
-
-		return Result<ChatActionResponse>.Success(
-			new ChatActionResponse("Leave Chat", true)
-		);
 	}
 }

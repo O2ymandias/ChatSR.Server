@@ -1,9 +1,12 @@
-﻿namespace ChatSR.Application.Dtos.ChatMemberDtos;
+﻿namespace ChatSR.Application.Dtos.MessageDtos;
 
 public record MessageResponse(
-	Guid Id,
+	Guid MessageId,
 	string Content,
 	DateTime SentAt,
-	string UserId,
-	string UserDisplayName
+	bool IsEdited,
+	DateTime? EditedAt,
+	string SenderId,
+	string SenderDisplayName,
+	string? SenderPictureUrl
 );
