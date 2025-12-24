@@ -5,6 +5,7 @@ namespace ChatSR.Application.Dtos.AuthDtos;
 public record RegisterUserRequest
 {
 	[Required]
+	[MinLength(3)]
 	[MaxLength(100)]
 	public string UserName { get; init; }
 
@@ -13,7 +14,10 @@ public record RegisterUserRequest
 	public string Email { get; init; }
 
 	[Required]
-	[Phone]
+	[RegularExpression(
+	@"^01[0125][0-9]{8}$",
+	ErrorMessage = "Invalid Egyptian mobile number. It must start with 010, 011, 012, or 015 and contain 11 digits."
+	)]
 	public string Phone { get; init; }
 
 	[Required]

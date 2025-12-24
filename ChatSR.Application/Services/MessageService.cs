@@ -57,6 +57,7 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 		return Result<MessageResponse>.Success(
 			new MessageResponse(
 				newMessage.Id,
+				newMessage.ChatId,
 				newMessage.Content,
 				newMessage.SentAt,
 				false,
@@ -106,6 +107,7 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 			.Take(pageSize)
 			.Select(m => new MessageResponse(
 				m.Id,
+				m.ChatId,
 				m.Content,
 				m.SentAt,
 				m.IsEdited,
@@ -171,6 +173,7 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 		return Result<MessageResponse>.Success(
 			new MessageResponse(
 				message.Id,
+				message.ChatId,
 				message.Content,
 				message.SentAt,
 				message.IsEdited,

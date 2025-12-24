@@ -11,6 +11,7 @@ public static class AppServicesExtensions
 		services.AddScoped<IAuthService, AuthService>();
 		services.AddScoped<IChatService, ChatService>();
 		services.AddScoped<IMessageService, MessageService>();
+		services.AddScoped<IConnectionManager, ConnectionManager>();
 		return services;
 	}
 }

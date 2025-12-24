@@ -31,7 +31,6 @@ public class MessageController(IMessageService messageService) : ControllerBase
 		return response.ToActionResult();
 	}
 
-
 	[HttpGet("{chatId:guid}")]
 	public async Task<IActionResult> GetChatMessages(Guid chatId, [FromQuery] PaginationParams pagination)
 	{
