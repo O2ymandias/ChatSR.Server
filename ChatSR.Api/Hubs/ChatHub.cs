@@ -1,4 +1,5 @@
-﻿using ChatSR.Application.Interfaces;
+﻿using ChatSR.Application.Dtos.MessageDtos;
+using ChatSR.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
@@ -45,6 +46,39 @@ public class ChatHub(
 		await connectionManager.KeepAliveAsync(userId);
 
 		Console.WriteLine("Heartbeat");
+	}
+
+	public async Task SendMessage(Guid chatId, SendMessageRequest request)
+	{
+		var userId = GetCurrentUserId();
+		if (userId is null) return;
+
+		if (string.IsNullOrWhiteSpace(request.Content))
+		{
+			await Clients.Caller.SendAsync("MessageError", "Message content can't be empty.");
+			return;
+		}
+
+		var result = await messageService.SendMessageAsync(userId, chatId, request);
+
+		if (!result.IsSuccess)
+		{
+			await Clients.Caller.SendAsync("MessageError", result.Error);
+			return;
+		}
+
+		var memberIds = await chatService.GetChatMemberIdsAsync(chatId);
+
+		foreach (var memberId in memberIds)
+		{
+			var connectionIds = await connectionManager.GetConnectionsAsync(memberId);
+			foreach (var connectionId in connectionIds)
+			{
+				await Clients
+					.Client(connectionId)
+					.SendAsync("ReceiveMessage", result.Value);
+			}
+		}
 	}
 
 	private string? GetCurrentUserId() => Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);

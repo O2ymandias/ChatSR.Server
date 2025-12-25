@@ -317,4 +317,14 @@ public class ChatService(AppDbContext dbContext, UserManager<User> userManager) 
 				cm.UserId == currentUserId
 			);
 	}
+
+	public Task<List<string>> GetChatMemberIdsAsync(Guid chatId)
+	{
+		var memberIds = dbContext.ChatMembers
+			.Where(cm => cm.ChatId == chatId)
+			.Select(cm => cm.UserId)
+			.ToListAsync();
+
+		return memberIds;
+	}
 }

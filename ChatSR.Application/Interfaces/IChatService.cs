@@ -13,4 +13,5 @@ public interface IChatService
 	Task<Result<ChatResponse>> RemoveMemberAsync(string currentUserId, Guid chatId, string memberIdToRemove);
 	Task<Result<bool>> LeaveChatAsync(string currentUserId, Guid chatId);
 	Task<bool> IsChatMemberAsync(string currentUserId, Guid chatId);
+	Task<List<string>> GetChatMemberIdsAsync(Guid chatId);
 }
