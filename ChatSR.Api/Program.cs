@@ -1,3 +1,4 @@
+using ChatSR.Api.Converters;
 using ChatSR.Api.Extensions;
 using ChatSR.Api.Hubs;
 using ChatSR.Infrastructure.Data;
@@ -10,7 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 #region Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services
+	.AddControllers()
+		.AddJsonOptions(options =>
+		{
+			options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+		});
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(opts =>
 {

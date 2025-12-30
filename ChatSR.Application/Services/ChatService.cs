@@ -1,5 +1,6 @@
 ﻿using ChatSR.Application.Dtos.ChatDtos;
 using ChatSR.Application.Dtos.ChatMemberDtos;
+using ChatSR.Application.Dtos.MessageDtos;
 using ChatSR.Application.Interfaces;
 using ChatSR.Application.Shared.Errors;
 using ChatSR.Application.Shared.Results;
@@ -11,7 +12,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChatSR.Application.Services;
 
-public class ChatService(AppDbContext dbContext, UserManager<User> userManager) : IChatService
+public class ChatService(
+	AppDbContext dbContext,
+	UserManager<User> userManager
+) : IChatService
 {
 	public async Task<Result<ChatResponse>> CreateChatAsync(string currentUserId, CreateChatRequest request)
 	{
@@ -120,19 +124,40 @@ public class ChatService(AppDbContext dbContext, UserManager<User> userManager) 
 
 	public async Task<Result<List<ChatListResponse>>> GetUserChatsAsync(string currentUserId)
 	{
+		// The generated query is to complex, needs to be optimized.
 		var chats = await dbContext.Chats
 			.Where(c => c.ChatMembers.Any(cm => cm.UserId == currentUserId))
 			.Select(c => new ChatListResponse(
 				c.Id,
 				c.IsGroup
-					? c.Name
-					: c.ChatMembers
+					? c.Name ?? string.Empty
+					: (c.ChatMembers
 						.Where(cm => cm.UserId != currentUserId)
 						.Select(cm => cm.User.DisplayName)
-						.FirstOrDefault(),
+						.FirstOrDefault()) ?? string.Empty,
 				c.IsGroup,
 				c.CreatedAt,
-				c.ChatMembers.Count
+				c.ChatMembers.Count,
+				c.Messages
+					.OrderByDescending(m => m.SentAt)
+					.Select(m => new MessageResponse(
+						m.Id,
+						m.ChatId,
+						m.Content,
+						DateTime.SpecifyKind(m.SentAt, DateTimeKind.Utc),
+						m.IsEdited,
+						m.EditedAt,
+						m.UserId,
+						m.User.DisplayName,
+						m.User.PictureUrl
+					))
+					.FirstOrDefault(),
+				c.IsGroup
+					? null
+					: c.ChatMembers
+						.Where(cm => cm.UserId != currentUserId)
+						.Select(cm => cm.User.PictureUrl)
+						.FirstOrDefault()
 			))
 			.ToListAsync();
 
