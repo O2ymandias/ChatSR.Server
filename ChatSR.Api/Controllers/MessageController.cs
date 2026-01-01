@@ -1,7 +1,7 @@
 ﻿using ChatSR.Api.Extensions;
 using ChatSR.Api.Responses;
 using ChatSR.Application.Dtos;
-using ChatSR.Application.Dtos.ChatMemberDtos;
+using ChatSR.Application.Dtos.ChatDtos;
 using ChatSR.Application.Dtos.MessageDtos;
 using ChatSR.Application.Interfaces;
 using ChatSR.Application.Shared.Errors;

@@ -14,7 +14,8 @@ namespace ChatSR.Application.Services;
 
 public class ChatService(
 	AppDbContext dbContext,
-	UserManager<User> userManager
+	UserManager<User> userManager,
+	IImageUploader imageUploader
 ) : IChatService
 {
 	public async Task<Result<ChatResponse>> CreateChatAsync(string currentUserId, CreateChatRequest request)
@@ -67,7 +68,13 @@ public class ChatService(
 			if (existingChat is not null)
 			{
 				return Result<ChatResponse>.Success(
-					new ChatResponse(existingChat.Id, existingChat.Name, existingChat.IsGroup, existingChat.CreatedAt)
+					new ChatResponse(
+						existingChat.Id,
+						existingChat.IsGroup,
+						existingChat.CreatedAt,
+						existingChat.Name,
+						existingChat.DisplayPictureUrl
+					)
 				);
 			}
 		}
@@ -75,9 +82,10 @@ public class ChatService(
 		var newChat = new Chat()
 		{
 			Id = Guid.NewGuid(),
-			Name = request.Name,
 			IsGroup = request.IsGroup,
-			ChatMembers = []
+			ChatMembers = [],
+			Name = request.Name,
+			DisplayPictureUrl = await imageUploader.UploadImageAsync(request.Picture, "images/chats")
 		};
 
 		foreach (var memberId in memberIds)
@@ -97,9 +105,14 @@ public class ChatService(
 		await dbContext.SaveChangesAsync();
 
 		return Result<ChatResponse>.Success(
-			new ChatResponse(newChat.Id, newChat.Name, newChat.IsGroup, newChat.CreatedAt)
+			new ChatResponse(
+				newChat.Id,
+				newChat.IsGroup,
+				newChat.CreatedAt,
+				newChat.Name,
+				newChat.DisplayPictureUrl
+			)
 		);
-
 	}
 
 	public async Task<Result<ChatResponse>> GetChatByIdAsync(string currentUserId, Guid chatId)
@@ -109,7 +122,7 @@ public class ChatService(
 				c.Id == chatId &&
 				c.ChatMembers.Any(cm => cm.UserId == currentUserId)
 			)
-			.Select(c => new ChatResponse(c.Id, c.Name, c.IsGroup, c.CreatedAt))
+			.Select(c => new ChatResponse(c.Id, c.IsGroup, c.CreatedAt, c.Name, c.DisplayPictureUrl))
 			.FirstOrDefaultAsync();
 
 		if (chat is null)
@@ -151,13 +164,7 @@ public class ChatService(
 						m.User.DisplayName,
 						m.User.PictureUrl
 					))
-					.FirstOrDefault(),
-				c.IsGroup
-					? null
-					: c.ChatMembers
-						.Where(cm => cm.UserId != currentUserId)
-						.Select(cm => cm.User.PictureUrl)
-						.FirstOrDefault()
+					.FirstOrDefault()
 			))
 			.ToListAsync();
 
@@ -218,14 +225,26 @@ public class ChatService(
 		if (!added)
 		{
 			return Result<ChatResponse>.Success(
-				new ChatResponse(chat.Id, chat.Name, chat.IsGroup, chat.CreatedAt)
+				new ChatResponse(
+					chat.Id,
+					chat.IsGroup,
+					chat.CreatedAt,
+					chat.Name,
+					chat.DisplayPictureUrl
+				)
 			);
 		}
 
 		await dbContext.SaveChangesAsync();
 
 		return Result<ChatResponse>.Success(
-			new ChatResponse(chat.Id, chat.Name, chat.IsGroup, chat.CreatedAt)
+			new ChatResponse(
+				chat.Id,
+				chat.IsGroup,
+				chat.CreatedAt,
+				chat.Name,
+				chat.DisplayPictureUrl
+			)
 		);
 	}
 
@@ -292,7 +311,13 @@ public class ChatService(
 		await dbContext.SaveChangesAsync();
 
 		return Result<ChatResponse>.Success(
-			new ChatResponse(chat.Id, chat.Name, chat.IsGroup, chat.CreatedAt)
+			new ChatResponse(
+				chat.Id,
+				chat.IsGroup,
+				chat.CreatedAt,
+				chat.Name,
+				chat.DisplayPictureUrl
+			)
 		);
 	}
 

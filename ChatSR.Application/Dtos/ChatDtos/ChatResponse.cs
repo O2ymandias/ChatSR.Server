@@ -1,8 +1,9 @@
-﻿namespace ChatSR.Application.Dtos.ChatMemberDtos;
+﻿namespace ChatSR.Application.Dtos.ChatDtos;
 
 public record ChatResponse(
 	Guid ChatId,
-	string? Name,
 	bool IsGroup,
-	DateTime CreatedAt
+	DateTime CreatedAt,
+	string? Name,
+	string? DisplayPictureUrl
 );

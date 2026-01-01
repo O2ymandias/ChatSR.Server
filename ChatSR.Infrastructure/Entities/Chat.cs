@@ -6,6 +6,7 @@ public class Chat
 	public string? Name { get; set; }
 	public bool IsGroup { get; set; }
 	public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+	public string? DisplayPictureUrl { get; set; }
 
 
 	// One-to-Many: Chat - ChatMembers

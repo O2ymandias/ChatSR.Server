@@ -13,10 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
 	.AddControllers()
-		.AddJsonOptions(options =>
-		{
-			options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
-		});
+	.AddJsonOptions(options =>
+	{
+		options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+	});
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(opts =>
 {
@@ -26,7 +26,9 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
 {
-	var redisConnection = builder.Configuration.GetConnectionString("RedisConnection") ?? throw new Exception("Redis connection string is missing.");
+	var redisConnection = builder.Configuration.GetConnectionString("RedisConnection")
+		?? throw new Exception("Redis connection string is missing.");
+
 	var config = ConfigurationOptions.Parse(redisConnection, true);
 	config.AbortOnConnectFail = false;
 	return ConnectionMultiplexer.Connect(config);
@@ -38,7 +40,7 @@ builder.Services
 	.AddIdentity<User, IdentityRole>()
 	.AddEntityFrameworkStores<AppDbContext>();
 
-builder.Services.AddAppServices();
+builder.Services.AddAppServices(builder.Configuration);
 builder.Services.AddAuthServices(builder.Configuration);
 
 builder.Services.AddCors(opts =>
@@ -70,6 +72,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapStaticAssets();
 
 app.UseCors("ChatSR.Client");
 

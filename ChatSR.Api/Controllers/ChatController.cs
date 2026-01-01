@@ -1,5 +1,6 @@
 ﻿using ChatSR.Api.Extensions;
 using ChatSR.Api.Responses;
+using ChatSR.Application.Dtos.ChatDtos;
 using ChatSR.Application.Dtos.ChatMemberDtos;
 using ChatSR.Application.Interfaces;
 using ChatSR.Application.Shared.Errors;
@@ -51,7 +52,7 @@ public class ChatController(IChatService chatService) : ControllerBase
 		var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 		if (currentUserId is null)
 		{
-			return BadRequest(ApiResponse<ChatResponse>.Failure(
+			return BadRequest(PagedApiResponse<ChatListResponse>.Failure(
 				Error.Validation("invalid token")
 			));
 		}
