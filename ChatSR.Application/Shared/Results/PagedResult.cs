@@ -2,7 +2,7 @@
 
 namespace ChatSR.Application.Shared.Results;
 
-public class PagedResult<T> : BaseResult
+public class PagedResult<T> : ResultBase
 {
 	private PagedResult(bool isSuccess, Error? error, IReadOnlyList<T>? items, PaginationMetadata? pagination)
 		: base(isSuccess, error)

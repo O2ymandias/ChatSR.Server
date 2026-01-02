@@ -3,22 +3,17 @@ using ChatSR.Application.Shared.Results;
 
 namespace ChatSR.Api.Responses;
 
-public class PagedApiResponse<T>
+public class PagedApiResponse<T> : ApiBaseResponse
 {
 	private PagedApiResponse(bool isSuccess, IReadOnlyList<T>? items, PaginationMetadata? pagination, Error? error, DateTime timestamp)
+		: base(isSuccess, error, timestamp)
 	{
-		IsSuccess = isSuccess;
 		Items = items;
 		Pagination = pagination;
-		Error = error;
-		Timestamp = timestamp;
 	}
 
-	public bool IsSuccess { get; set; }
 	public IReadOnlyList<T>? Items { get; set; }
 	public PaginationMetadata? Pagination { get; set; }
-	public Error? Error { get; set; }
-	public DateTime Timestamp { get; set; }
 
 	public static PagedApiResponse<T> Success(IReadOnlyList<T> items, PaginationMetadata pagination) =>
 		new(true, items, pagination, default, DateTime.UtcNow);

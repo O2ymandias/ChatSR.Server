@@ -6,6 +6,26 @@ namespace ChatSR.Api.Extensions;
 
 public static class ResultExtensions
 {
+
+	public static IActionResult ToActionResult(this Result result)
+	{
+		if (result.IsSuccess)
+		{
+			var successResponse = ApiResponse.Success();
+			return new OkObjectResult(successResponse);
+		}
+
+		var code = result.Error!.Code;
+		var errorResponse = ApiResponse.Failure(result.Error);
+		return code switch
+		{
+			StatusCodes.Status400BadRequest => new BadRequestObjectResult(errorResponse),
+			StatusCodes.Status404NotFound => new NotFoundObjectResult(errorResponse),
+			StatusCodes.Status409Conflict => new BadRequestObjectResult(errorResponse),
+			_ => new ObjectResult(errorResponse) { StatusCode = code }
+		};
+	}
+
 	public static IActionResult ToActionResult<T>(this Result<T> result)
 	{
 		if (result.IsSuccess)

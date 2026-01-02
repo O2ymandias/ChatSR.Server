@@ -2,20 +2,26 @@
 
 namespace ChatSR.Api.Responses;
 
-public class ApiResponse<T>
+public class ApiResponse : ApiBaseResponse
 {
-	private ApiResponse(bool isSuccess, T? data, Error? error, DateTime timestamp)
+	private ApiResponse(bool isSuccess, Error? error, DateTime timestamp)
+		: base(isSuccess, error, timestamp)
 	{
-		IsSuccess = isSuccess;
-		Data = data;
-		Error = error;
-		Timestamp = timestamp;
 	}
 
-	public bool IsSuccess { get; set; }
+	public static ApiResponse Success() => new(true, null, DateTime.UtcNow);
+	public static ApiResponse Failure(Error error) => new(false, error, DateTime.UtcNow);
+}
+
+public class ApiResponse<T> : ApiBaseResponse
+{
+	private ApiResponse(bool isSuccess, T? data, Error? error, DateTime timestamp)
+		: base(isSuccess, error, timestamp)
+	{
+		Data = data;
+	}
+
 	public T? Data { get; set; }
-	public Error? Error { get; set; }
-	public DateTime Timestamp { get; set; }
 
 	public static ApiResponse<T> Success(T data) => new(true, data, default, DateTime.UtcNow);
 	public static ApiResponse<T> Failure(Error error) => new(false, default, error, DateTime.UtcNow);

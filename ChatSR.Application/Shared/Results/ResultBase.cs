@@ -2,9 +2,9 @@
 
 namespace ChatSR.Application.Shared.Results;
 
-public abstract class BaseResult
+public abstract class ResultBase
 {
-	protected BaseResult(bool isSuccess, Error? error)
+	protected ResultBase(bool isSuccess, Error? error)
 	{
 		if (isSuccess && error is not null)
 			throw new ArgumentException("Successful result can't have an error.");

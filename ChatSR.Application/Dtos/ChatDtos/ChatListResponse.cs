@@ -8,5 +8,6 @@ public record ChatListResponse(
 	bool IsGroup,
 	DateTime CreatedAt,
 	int MemberCount,
-	MessageResponse? LastMessage
+	MessageResponse? LastMessage,
+	string? DisplayPictureUrl
 );

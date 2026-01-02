@@ -67,15 +67,7 @@ public class ChatService(
 
 			if (existingChat is not null)
 			{
-				return Result<ChatResponse>.Success(
-					new ChatResponse(
-						existingChat.Id,
-						existingChat.IsGroup,
-						existingChat.CreatedAt,
-						existingChat.Name,
-						existingChat.DisplayPictureUrl
-					)
-				);
+				return await GetChatByIdAsync(currentUserId, existingChat.Id);
 			}
 		}
 
@@ -104,15 +96,7 @@ public class ChatService(
 
 		await dbContext.SaveChangesAsync();
 
-		return Result<ChatResponse>.Success(
-			new ChatResponse(
-				newChat.Id,
-				newChat.IsGroup,
-				newChat.CreatedAt,
-				newChat.Name,
-				newChat.DisplayPictureUrl
-			)
-		);
+		return await GetChatByIdAsync(currentUserId, newChat.Id);
 	}
 
 	public async Task<Result<ChatResponse>> GetChatByIdAsync(string currentUserId, Guid chatId)
@@ -122,7 +106,19 @@ public class ChatService(
 				c.Id == chatId &&
 				c.ChatMembers.Any(cm => cm.UserId == currentUserId)
 			)
-			.Select(c => new ChatResponse(c.Id, c.IsGroup, c.CreatedAt, c.Name, c.DisplayPictureUrl))
+			.Select(c => new ChatResponse(
+				c.Id,
+				c.IsGroup,
+				c.CreatedAt,
+					c.IsGroup
+					? c.Name ?? string.Empty
+					: (c.ChatMembers
+						.Where(cm => cm.UserId != currentUserId)
+						.Select(cm => cm.User.DisplayName)
+						.FirstOrDefault()) ?? string.Empty,
+				c.DisplayPictureUrl
+			)
+			)
 			.FirstOrDefaultAsync();
 
 		if (chat is null)
@@ -164,14 +160,15 @@ public class ChatService(
 						m.User.DisplayName,
 						m.User.PictureUrl
 					))
-					.FirstOrDefault()
+					.FirstOrDefault(),
+				c.DisplayPictureUrl
 			))
 			.ToListAsync();
 
 		return Result<List<ChatListResponse>>.Success(chats);
 	}
 
-	public async Task<Result<ChatResponse>> AddMembersAsync(string currentUserId, Guid chatId, AddMembersRequest request)
+	public async Task<Result> AddMembersAsync(string currentUserId, Guid chatId, AddMembersRequest request)
 	{
 		var chat = await dbContext.Chats
 			.Include(c => c.ChatMembers)
@@ -182,14 +179,14 @@ public class ChatService(
 
 		if (chat is null)
 		{
-			return Result<ChatResponse>.Failure(
+			return Result.Failure(
 				Error.NotFound("Unable to access this chat.")
 			);
 		}
 
 		if (!chat.IsGroup)
 		{
-			return Result<ChatResponse>.Failure(
+			return Result.Failure(
 				Error.Validation("You can't add members to a private chat.")
 			);
 		}
@@ -202,12 +199,11 @@ public class ChatService(
 		if (validUsersIds.Count != request.MemberIds.Count)
 		{
 			var invalidIds = request.MemberIds.Except(validUsersIds);
-			return Result<ChatResponse>.Failure(
+			return Result.Failure(
 				Error.Validation($"Invalid memberIds: {string.Join(", ", invalidIds)}")
 			);
 		}
 
-		bool added = false;
 		foreach (var memberId in validUsersIds)
 		{
 			if (chat.ChatMembers.Any(cm => cm.UserId == memberId))
@@ -218,41 +214,18 @@ public class ChatService(
 				UserId = memberId,
 				Role = ChatMemberRole.Member
 			});
-
-			added = true;
-		}
-
-		if (!added)
-		{
-			return Result<ChatResponse>.Success(
-				new ChatResponse(
-					chat.Id,
-					chat.IsGroup,
-					chat.CreatedAt,
-					chat.Name,
-					chat.DisplayPictureUrl
-				)
-			);
 		}
 
 		await dbContext.SaveChangesAsync();
 
-		return Result<ChatResponse>.Success(
-			new ChatResponse(
-				chat.Id,
-				chat.IsGroup,
-				chat.CreatedAt,
-				chat.Name,
-				chat.DisplayPictureUrl
-			)
-		);
+		return Result.Success();
 	}
 
-	public async Task<Result<ChatResponse>> RemoveMemberAsync(string currentUserId, Guid chatId, string memberIdToRemove)
+	public async Task<Result> RemoveMemberAsync(string currentUserId, Guid chatId, string memberIdToRemove)
 	{
 		if (currentUserId == memberIdToRemove)
 		{
-			return Result<ChatResponse>.Failure(
+			return Result.Failure(
 				Error.Validation("You can't remove yourself. call 'GET: /api/chats/leave-chat' to leave chat")
 			);
 		}
@@ -260,7 +233,7 @@ public class ChatService(
 		var userToRemove = await userManager.FindByIdAsync(memberIdToRemove);
 		if (userToRemove is null)
 		{
-			return Result<ChatResponse>.Failure(
+			return Result.Failure(
 				Error.NotFound($"The user '{memberIdToRemove}' does not exist.")
 			);
 		}
@@ -274,14 +247,14 @@ public class ChatService(
 
 		if (chat is null)
 		{
-			return Result<ChatResponse>.Failure(
+			return Result.Failure(
 				Error.NotFound("Unable to access this chat.")
 			);
 		}
 
 		if (!chat.IsGroup)
 		{
-			return Result<ChatResponse>.Failure(
+			return Result.Failure(
 				Error.Validation("You can't remove members from a private chat.")
 			);
 		}
@@ -293,7 +266,7 @@ public class ChatService(
 
 		if (!isAdmin)
 		{
-			return Result<ChatResponse>.Failure(
+			return Result.Failure(
 				Error.Validation("You do not have permission to remove members from this chat.")
 			);
 		}
@@ -301,7 +274,7 @@ public class ChatService(
 		var memberToRemove = chat.ChatMembers.FirstOrDefault(cm => cm.UserId == memberIdToRemove);
 		if (memberToRemove is null)
 		{
-			return Result<ChatResponse>.Failure(
+			return Result.Failure(
 				Error.NotFound($"The user '{memberIdToRemove}' is not a member of this chat.")
 			);
 		}
@@ -310,18 +283,10 @@ public class ChatService(
 
 		await dbContext.SaveChangesAsync();
 
-		return Result<ChatResponse>.Success(
-			new ChatResponse(
-				chat.Id,
-				chat.IsGroup,
-				chat.CreatedAt,
-				chat.Name,
-				chat.DisplayPictureUrl
-			)
-		);
+		return Result.Success();
 	}
 
-	public async Task<Result<bool>> LeaveChatAsync(string currentUserId, Guid chatId)
+	public async Task<Result> LeaveChatAsync(string currentUserId, Guid chatId)
 	{
 		var chat = await dbContext.Chats
 			.Include(cm => cm.ChatMembers)
@@ -329,7 +294,7 @@ public class ChatService(
 
 		if (chat is null)
 		{
-			return Result<bool>.Failure(
+			return Result.Failure(
 				Error.NotFound($"No chat was found with the provided ID: {chatId}")
 			);
 		}
@@ -337,7 +302,7 @@ public class ChatService(
 		var member = chat.ChatMembers.FirstOrDefault(cm => cm.UserId == currentUserId);
 		if (member is null)
 		{
-			return Result<bool>.Failure(
+			return Result.Failure(
 				Error.NotFound($"The user '{currentUserId}' is not a member of this chat.")
 			);
 		}
@@ -356,7 +321,7 @@ public class ChatService(
 
 		await dbContext.SaveChangesAsync();
 
-		return Result<bool>.Success(true);
+		return Result.Success();
 	}
 
 	public async Task<bool> IsChatMemberAsync(string currentUserId, Guid chatId)
