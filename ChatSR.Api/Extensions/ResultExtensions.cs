@@ -35,7 +35,7 @@ public static class ResultExtensions
 		}
 
 		var code = result.Error!.Code;
-		var errorResponse = ApiResponse<T>.Failure(result.Error);
+		var errorResponse = ApiResponse.Failure(result.Error);
 		return code switch
 		{
 			StatusCodes.Status400BadRequest => new BadRequestObjectResult(errorResponse),
@@ -55,7 +55,7 @@ public static class ResultExtensions
 		}
 
 		var code = result.Error!.Code;
-		var errorResponse = PagedApiResponse<T>.Failure(result.Error);
+		var errorResponse = ApiResponse.Failure(result.Error);
 
 		return code switch
 		{
