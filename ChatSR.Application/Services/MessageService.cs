@@ -44,8 +44,7 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 			Id = Guid.NewGuid(),
 			ChatId = chatId,
 			UserId = currentUserId,
-			Content = content.Trim(),
-			SentAt = DateTime.UtcNow,
+			Content = content.Trim()
 		};
 
 		dbContext.Messages.Add(newMessage);

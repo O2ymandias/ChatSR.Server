@@ -6,8 +6,8 @@ public class User : IdentityUser
 {
 	public string DisplayName { get; set; }
 	public string? PictureUrl { get; set; }
-	public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-	public DateTime? LastActive { get; set; }
+	public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+	public DateTimeOffset? LastActive { get; set; }
 	public bool IsDeleted { get; set; } = false;
 
 	// One-to-Many: Chat - ChatMembers

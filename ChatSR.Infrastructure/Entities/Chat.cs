@@ -5,7 +5,7 @@ public class Chat
 	public Guid Id { get; set; }
 	public string? Name { get; set; }
 	public bool IsGroup { get; set; }
-	public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+	public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 	public string? DisplayPictureUrl { get; set; }
 
 

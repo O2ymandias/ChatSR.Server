@@ -3,7 +3,7 @@
 public record ChatResponse(
 	Guid ChatId,
 	bool IsGroup,
-	DateTime CreatedAt,
+	DateTimeOffset CreatedAt,
 	string? Name,
 	string? DisplayPictureUrl
 );

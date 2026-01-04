@@ -153,7 +153,7 @@ public class ChatService(
 						m.Id,
 						m.ChatId,
 						m.Content,
-						DateTime.SpecifyKind(m.SentAt, DateTimeKind.Utc),
+						m.SentAt,
 						m.IsEdited,
 						m.EditedAt,
 						m.UserId,

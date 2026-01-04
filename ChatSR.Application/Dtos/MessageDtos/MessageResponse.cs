@@ -4,9 +4,9 @@ public record MessageResponse(
 	Guid MessageId,
 	Guid chatId,
 	string Content,
-	DateTime SentAt,
+	DateTimeOffset SentAt,
 	bool IsEdited,
-	DateTime? EditedAt,
+	DateTimeOffset? EditedAt,
 	string SenderId,
 	string SenderDisplayName,
 	string? SenderPictureUrl

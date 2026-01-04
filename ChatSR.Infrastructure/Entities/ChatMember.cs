@@ -4,7 +4,7 @@ namespace ChatSR.Infrastructure.Entities;
 
 public class ChatMember
 {
-	public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+	public DateTimeOffset JoinedAt { get; set; } = DateTimeOffset.UtcNow;
 	public ChatMemberRole Role { get; set; }
 
 	// One-to-Many: Chat - ChatMembers

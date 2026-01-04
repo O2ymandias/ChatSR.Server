@@ -6,7 +6,7 @@ public record ChatListResponse(
 	Guid ChatId,
 	string Name,
 	bool IsGroup,
-	DateTime CreatedAt,
+	DateTimeOffset CreatedAt,
 	int MemberCount,
 	MessageResponse? LastMessage,
 	string? DisplayPictureUrl

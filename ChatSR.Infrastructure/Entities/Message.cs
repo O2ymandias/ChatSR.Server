@@ -4,9 +4,9 @@ public class Message
 {
 	public Guid Id { get; set; }
 	public string Content { get; set; }
-	public DateTime SentAt { get; set; } = DateTime.UtcNow;
+	public DateTimeOffset SentAt { get; set; } = DateTimeOffset.UtcNow;
 	public bool IsEdited { get; set; }
-	public DateTime? EditedAt { get; set; }
+	public DateTimeOffset? EditedAt { get; set; }
 
 	// One-to-Many: Chat - Messages
 	public Chat Chat { get; set; }
