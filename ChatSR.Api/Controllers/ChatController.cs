@@ -60,6 +60,22 @@ public class ChatController(IChatService chatService) : ControllerBase
 		return response.ToActionResult();
 	}
 
+	[HttpGet("mark-as-read/{chatId:guid}")]
+	public async Task<IActionResult> MarkChatAsRead(Guid chatId)
+	{
+		var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (currentUserId is null)
+		{
+			return BadRequest(ApiResponse.Failure(
+				Error.Validation("invalid token")
+			));
+		}
+
+		var response = await chatService.MarkChatAsReadAsync(currentUserId, chatId);
+		return response.ToActionResult();
+	}
+
+
 	[HttpPut("add-members/{chatId:guid}")]
 	public async Task<IActionResult> AddMembersToChat(Guid chatId, AddMembersRequest request)
 	{
@@ -101,6 +117,22 @@ public class ChatController(IChatService chatService) : ControllerBase
 		}
 
 		var response = await chatService.LeaveChatAsync(currentUserId, chatId);
+		return response.ToActionResult();
+	}
+
+
+	[HttpGet("chat-members/{chatId:guid}")]
+	public async Task<IActionResult> GetChatMembers(Guid chatId)
+	{
+		var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (currentUserId is null)
+		{
+			return BadRequest(ApiResponse.Failure(
+				Error.Validation("invalid token")
+			));
+		}
+
+		var response = await chatService.GetChatMembers(chatId);
 		return response.ToActionResult();
 	}
 }

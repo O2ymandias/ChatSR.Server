@@ -69,14 +69,60 @@ public class ChatHub(
 
 		var memberIds = await chatService.GetChatMemberIdsAsync(chatId);
 
+		var allConnections = new List<string>();
+
 		foreach (var memberId in memberIds)
 		{
-			var connectionIds = await connectionManager.GetConnectionsAsync(memberId);
-			foreach (var connectionId in connectionIds)
+			var connections = await connectionManager.GetConnectionsAsync(memberId);
+			allConnections.AddRange(connections);
+		}
+
+		await Clients.Clients(allConnections)
+			 .SendAsync("ReceiveMessage", result.Value);
+	}
+
+
+	public async Task StartTyping(Guid chatId)
+	{
+		var userId = GetCurrentUserId();
+		if (userId is null) return;
+
+
+		var chatMemberIds = await chatService.GetChatMemberIdsAsync(chatId);
+
+		foreach (var chatMemberId in chatMemberIds)
+		{
+			if (userId == chatMemberId) continue;
+
+			var connectionIds = await connectionManager.GetConnectionsAsync(chatMemberId);
+
+			if (connectionIds.Count > 0)
 			{
 				await Clients
-					.Client(connectionId)
-					.SendAsync("ReceiveMessage", result.Value);
+					.Clients(connectionIds)
+					.SendAsync("UserTyping", chatId, userId);
+			}
+		}
+	}
+
+	public async Task StopTyping(Guid chatId)
+	{
+		var userId = GetCurrentUserId();
+		if (userId is null) return;
+
+		var chatMemberIds = await chatService.GetChatMemberIdsAsync(chatId);
+
+		foreach (var chatMemberId in chatMemberIds)
+		{
+			if (userId == chatMemberId) continue;
+
+			var connectionIds = await connectionManager.GetConnectionsAsync(chatMemberId);
+
+			if (connectionIds.Count > 0)
+			{
+				await Clients
+					.Clients(connectionIds)
+					.SendAsync("UserStoppedTyping", chatId, userId);
 			}
 		}
 	}

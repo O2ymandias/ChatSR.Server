@@ -161,11 +161,35 @@ public class ChatService(
 						m.User.PictureUrl
 					))
 					.FirstOrDefault(),
-				c.DisplayPictureUrl
+				c.DisplayPictureUrl,
+				c.Messages.Count(
+					m => m.SentAt > (
+							c.ChatMembers
+							.First(cm => cm.UserId == currentUserId)
+							.LastReadAt ?? DateTimeOffset.MinValue
+						)
+				)
 			))
 			.ToListAsync();
 
 		return Result<List<ChatListResponse>>.Success(chats);
+	}
+
+	public async Task<Result> MarkChatAsReadAsync(string currentUserId, Guid chatId)
+	{
+		var chatMember = await dbContext.ChatMembers
+			.FirstOrDefaultAsync(cm =>
+				cm.UserId == currentUserId &&
+				cm.ChatId == chatId
+			);
+
+		if (chatMember is null)
+			return Result.Failure(Error.NotFound("Chat member not found"));
+
+		chatMember.LastReadAt = DateTimeOffset.UtcNow;
+		await dbContext.SaveChangesAsync();
+
+		return Result.Success();
 	}
 
 	public async Task<Result> AddMembersAsync(string currentUserId, Guid chatId, AddMembersRequest request)
@@ -341,5 +365,22 @@ public class ChatService(
 			.ToListAsync();
 
 		return memberIds;
+	}
+
+	public async Task<Result<List<ChatMemberResponse>>> GetChatMembers(Guid chatId)
+	{
+		var chatMembers = await dbContext.ChatMembers
+			.Where(cm => cm.ChatId == chatId)
+			.Select(cm => new ChatMemberResponse(
+				cm.ChatId,
+				cm.UserId,
+				cm.User.DisplayName,
+				cm.User.PictureUrl,
+				cm.Role.ToString(),
+				cm.JoinedAt
+			))
+			.ToListAsync();
+
+		return Result<List<ChatMemberResponse>>.Success(chatMembers);
 	}
 }

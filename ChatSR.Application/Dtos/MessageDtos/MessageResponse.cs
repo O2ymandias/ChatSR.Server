@@ -2,7 +2,7 @@
 
 public record MessageResponse(
 	Guid MessageId,
-	Guid chatId,
+	Guid ChatId,
 	string Content,
 	DateTimeOffset SentAt,
 	bool IsEdited,

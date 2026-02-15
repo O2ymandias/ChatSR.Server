@@ -9,5 +9,6 @@ public record ChatListResponse(
 	DateTimeOffset CreatedAt,
 	int MemberCount,
 	MessageResponse? LastMessage,
-	string? DisplayPictureUrl
+	string? DisplayPictureUrl,
+	int UnreadCount
 );
