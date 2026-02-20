@@ -31,7 +31,7 @@ public class MessageController(IMessageService messageService) : ControllerBase
 	}
 
 	[HttpGet("{chatId:guid}")]
-	public async Task<IActionResult> GetChatMessages(Guid chatId, [FromQuery] PaginationParams pagination)
+	public async Task<IActionResult> GetChatMessages(Guid chatId, [FromQuery] QueryParams queryParams)
 	{
 		var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 		if (currentUserId is null)
@@ -41,7 +41,8 @@ public class MessageController(IMessageService messageService) : ControllerBase
 			));
 		}
 
-		var response = await messageService.GetChatMessagesAsync(currentUserId, chatId, pagination.Page, pagination.PageSize);
+		var response = await messageService.GetChatMessagesAsync(currentUserId, chatId, queryParams.Page, queryParams.PageSize, queryParams.SearchTerm);
+
 		return response.ToActionResult();
 	}
 

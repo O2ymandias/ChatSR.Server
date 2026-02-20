@@ -165,9 +165,11 @@ public class ChatService(
 				c.Messages.Count(
 					m => m.SentAt > (
 							c.ChatMembers
-							.First(cm => cm.UserId == currentUserId)
-							.LastReadAt ?? DateTimeOffset.MinValue
-						)
+							.Where(cm => cm.UserId == currentUserId)
+							.Select(cm => cm.LastReadAt)
+							.FirstOrDefault() ?? DateTimeOffset.MinValue
+						) &&
+						m.UserId != currentUserId
 				)
 			))
 			.ToListAsync();

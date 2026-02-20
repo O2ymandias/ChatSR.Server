@@ -68,7 +68,7 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 		);
 	}
 
-	public async Task<PagedResult<MessageResponse>> GetChatMessagesAsync(string currentUserId, Guid chatId, int page, int pageSize)
+	public async Task<PagedResult<MessageResponse>> GetChatMessagesAsync(string currentUserId, Guid chatId, int page, int pageSize, string? searchTerm)
 	{
 		if (page <= 0)
 			page = PaginationConstants.DefaultPage;
@@ -88,7 +88,10 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 		}
 
 		var totalCount = await dbContext.Messages
-			.Where(m => m.ChatId == chatId)
+			.Where(m =>
+				m.ChatId == chatId &&
+				(string.IsNullOrEmpty(searchTerm) || m.Content.Contains(searchTerm))
+			)
 			.CountAsync();
 
 		if (totalCount == 0)
@@ -100,7 +103,10 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 		}
 
 		var messages = await dbContext.Messages
-			.Where(m => m.ChatId == chatId)
+			.Where(m =>
+				m.ChatId == chatId &&
+				(string.IsNullOrEmpty(searchTerm) || m.Content.Contains(searchTerm))
+			)
 			.OrderByDescending(m => m.SentAt)
 			.Skip((page - 1) * pageSize)
 			.Take(pageSize)
