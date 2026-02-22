@@ -24,8 +24,14 @@ public class ChatHub(
 			return;
 		}
 
+		var wasOffline = !await connectionManager.IsUserOnlineAsync(userId);
+
 		await connectionManager.AddConnectionAsync(userId, Context.ConnectionId);
+
+		if (wasOffline)
+			await NotifyUserStatusAsync("UserOnline", userId);
 	}
+
 
 	public override async Task OnDisconnectedAsync(Exception? exception)
 	{
@@ -33,6 +39,11 @@ public class ChatHub(
 		if (userId is not null)
 		{
 			await connectionManager.RemoveConnectionAsync(userId, Context.ConnectionId);
+
+			var isNowOffline = !await connectionManager.IsUserOnlineAsync(userId);
+
+			if (isNowOffline)
+				await NotifyUserStatusAsync("UserOffline", userId, DateTimeOffset.UtcNow);
 		}
 
 		await base.OnDisconnectedAsync(exception);
@@ -81,7 +92,6 @@ public class ChatHub(
 			 .SendAsync("ReceiveMessage", result.Value);
 	}
 
-
 	public async Task StartTyping(Guid chatId)
 	{
 		var userId = GetCurrentUserId();
@@ -128,4 +138,22 @@ public class ChatHub(
 	}
 
 	private string? GetCurrentUserId() => Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+	private async Task NotifyUserStatusAsync(string status, string userId, params object[] args)
+	{
+		var sharedMemberIds = await chatService.GetSharedMemberIdsAsync(userId);
+
+		if (sharedMemberIds.Count == 0) return;
+
+		List<string> connections = [];
+
+		foreach (var memberId in sharedMemberIds)
+			connections.AddRange(await connectionManager.GetConnectionsAsync(memberId));
+
+		if (connections.Count == 0) return;
+
+		await Clients
+			.Clients(connections)
+			.SendAsync(status, userId, args);
+	}
 }

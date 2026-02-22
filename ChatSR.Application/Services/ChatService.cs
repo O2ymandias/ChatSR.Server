@@ -385,4 +385,16 @@ public class ChatService(
 
 		return Result<List<ChatMemberResponse>>.Success(chatMembers);
 	}
+
+	public async Task<List<string>> GetSharedMemberIdsAsync(string userId)
+	{
+		return await dbContext.ChatMembers
+			.Where(cm => cm.UserId == userId)
+			.Select(cm => cm.Chat)
+			.SelectMany(c => c.ChatMembers)
+			.Where(cm => cm.UserId != userId)
+			.Select(cm => cm.UserId)
+			.Distinct()
+			.ToListAsync();
+	}
 }

@@ -16,4 +16,5 @@ public interface IChatService
 	Task<bool> IsChatMemberAsync(string currentUserId, Guid chatId);
 	Task<List<string>> GetChatMemberIdsAsync(Guid chatId);
 	Task<Result<List<ChatMemberResponse>>> GetChatMembers(Guid chatId);
+	Task<List<string>> GetSharedMemberIdsAsync(string userId);
 }
