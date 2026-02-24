@@ -30,6 +30,8 @@ public class ChatHub(
 
 		if (wasOffline)
 			await NotifyUserStatusAsync("UserOnline", userId);
+
+		await NotifyCallerOfOnlineUsersAsync(userId);
 	}
 
 
@@ -55,8 +57,6 @@ public class ChatHub(
 		if (userId is null) return;
 
 		await connectionManager.KeepAliveAsync(userId);
-
-		Console.WriteLine("Heartbeat");
 	}
 
 	public async Task SendMessage(Guid chatId, SendMessageRequest request)
@@ -155,5 +155,22 @@ public class ChatHub(
 		await Clients
 			.Clients(connections)
 			.SendAsync(status, userId, args);
+	}
+
+	private async Task NotifyCallerOfOnlineUsersAsync(string userId)
+	{
+		var sharedMemberIds = await chatService.GetSharedMemberIdsAsync(userId);
+
+		List<string> onlineSharedMembers = [];
+
+		foreach (var memberId in sharedMemberIds)
+		{
+			if (await connectionManager.IsUserOnlineAsync(memberId))
+				onlineSharedMembers.Add(memberId);
+		}
+
+		if (onlineSharedMembers.Count == 0) return;
+
+		await Clients.Caller.SendAsync("OnlineUsers", onlineSharedMembers);
 	}
 }
