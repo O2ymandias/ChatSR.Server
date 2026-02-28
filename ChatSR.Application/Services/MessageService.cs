@@ -55,15 +55,16 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 
 		return Result<MessageResponse>.Success(
 			new MessageResponse(
-				newMessage.Id,
-				newMessage.ChatId,
-				newMessage.Content,
-				newMessage.SentAt,
-				false,
-				null,
-				sender?.Id ?? string.Empty,
-				sender?.DisplayName ?? string.Empty,
-				sender?.PictureUrl ?? string.Empty
+				MessageId: newMessage.Id,
+				ChatId: newMessage.ChatId,
+				Content: newMessage.Content,
+				SentAt: newMessage.SentAt,
+				IsEdited: false,
+				EditedAt: null,
+				SenderId: sender?.Id ?? string.Empty,
+				SenderDisplayName: sender?.DisplayName ?? string.Empty,
+				SenderPictureUrl: sender?.PictureUrl ?? string.Empty,
+				IsRead: false
 			)
 		);
 	}
@@ -119,7 +120,12 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 				m.EditedAt,
 				m.UserId,
 				m.User.DisplayName,
-				m.User.PictureUrl ?? string.Empty
+				m.User.PictureUrl ?? string.Empty,
+				dbContext.ChatMembers.Any(cm =>
+					cm.ChatId == chatId &&
+					cm.UserId != currentUserId &&
+					cm.LastReadAt >= m.SentAt
+				)
 			))
 			.ToListAsync();
 
@@ -177,15 +183,20 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 
 		return Result<MessageResponse>.Success(
 			new MessageResponse(
-				message.Id,
-				message.ChatId,
-				message.Content,
-				message.SentAt,
-				message.IsEdited,
-				message.EditedAt,
-				message.User.Id,
-				message.User.DisplayName,
-				message.User.PictureUrl
+				MessageId: message.Id,
+				ChatId: message.ChatId,
+				Content: message.Content,
+				SentAt: message.SentAt,
+				IsEdited: message.IsEdited,
+				EditedAt: message.EditedAt,
+				SenderId: message.User.Id,
+				SenderDisplayName: message.User.DisplayName,
+				SenderPictureUrl: message.User.PictureUrl,
+				IsRead: dbContext.ChatMembers.Any(cm =>
+					cm.ChatId == message.ChatId &&
+					cm.UserId != message.UserId &&
+					cm.LastReadAt >= message.SentAt
+				)
 			)
 		);
 	}

@@ -158,7 +158,11 @@ public class ChatService(
 						m.EditedAt,
 						m.UserId,
 						m.User.DisplayName,
-						m.User.PictureUrl
+						m.User.PictureUrl,
+						c.ChatMembers.Any(cm =>
+							cm.UserId != m.UserId &&
+							cm.LastReadAt >= m.SentAt
+						)
 					))
 					.FirstOrDefault(),
 				c.DisplayPictureUrl,

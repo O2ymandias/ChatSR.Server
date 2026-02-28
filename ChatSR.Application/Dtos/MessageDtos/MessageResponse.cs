@@ -9,5 +9,6 @@ public record MessageResponse(
 	DateTimeOffset? EditedAt,
 	string SenderId,
 	string SenderDisplayName,
-	string? SenderPictureUrl
+	string? SenderPictureUrl,
+	bool IsRead // True if any chatMember(NOT SENDER) has (chatMember.LastReadAt >= message.SentAt) 
 );
