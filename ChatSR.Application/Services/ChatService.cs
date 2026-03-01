@@ -181,7 +181,7 @@ public class ChatService(
 		return Result<List<ChatListResponse>>.Success(chats);
 	}
 
-	public async Task<Result> MarkChatAsReadAsync(string currentUserId, Guid chatId)
+	public async Task<DateTimeOffset?> MarkChatAsReadAsync(string currentUserId, Guid chatId)
 	{
 		var chatMember = await dbContext.ChatMembers
 			.FirstOrDefaultAsync(cm =>
@@ -189,13 +189,12 @@ public class ChatService(
 				cm.ChatId == chatId
 			);
 
-		if (chatMember is null)
-			return Result.Failure(Error.NotFound("Chat member not found"));
+		if (chatMember is null) return null;
 
 		chatMember.LastReadAt = DateTimeOffset.UtcNow;
 		await dbContext.SaveChangesAsync();
 
-		return Result.Success();
+		return chatMember.LastReadAt;
 	}
 
 	public async Task<Result> AddMembersAsync(string currentUserId, Guid chatId, AddMembersRequest request)

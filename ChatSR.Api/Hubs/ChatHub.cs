@@ -10,7 +10,8 @@ namespace ChatSR.Api.Hubs;
 public class ChatHub(
 	IChatService chatService,
 	IMessageService messageService,
-	IConnectionManager connectionManager
+	IConnectionManager connectionManager,
+	ILogger<ChatHub> logger
 ) : Hub
 {
 	public async override Task OnConnectedAsync()
@@ -33,7 +34,6 @@ public class ChatHub(
 
 		await NotifyCallerOfOnlineUsersAsync(userId);
 	}
-
 
 	public override async Task OnDisconnectedAsync(Exception? exception)
 	{
@@ -135,6 +135,33 @@ public class ChatHub(
 					.SendAsync("UserStoppedTyping", chatId, userId);
 			}
 		}
+	}
+
+	public async Task MarkChatAsRead(Guid chatId)
+	{
+		var userId = GetCurrentUserId();
+		if (userId is null) return;
+
+		var lastReadAt = await chatService.MarkChatAsReadAsync(userId, chatId);
+		if (lastReadAt is null) return;
+
+		List<string> connectionsToNotify = [];
+
+		var chatMemberIds = await chatService.GetChatMemberIdsAsync(chatId);
+		foreach (var chatMemberId in chatMemberIds)
+		{
+			if (userId == chatMemberId) continue;
+
+			var connectionIds = await connectionManager.GetConnectionsAsync(chatMemberId);
+			connectionsToNotify.AddRange(connectionIds);
+		}
+
+		if (connectionsToNotify.Count == 0) return;
+
+		await Clients
+			.Clients(connectionsToNotify)
+			.SendAsync("ChatRead", chatId, userId, lastReadAt.Value);
+
 	}
 
 	private string? GetCurrentUserId() => Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
