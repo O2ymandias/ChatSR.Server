@@ -10,8 +10,7 @@ namespace ChatSR.Api.Hubs;
 public class ChatHub(
 	IChatService chatService,
 	IMessageService messageService,
-	IConnectionManager connectionManager,
-	ILogger<ChatHub> logger
+	IConnectionManager connectionManager
 ) : Hub
 {
 	public async override Task OnConnectedAsync()
@@ -80,16 +79,51 @@ public class ChatHub(
 
 		var memberIds = await chatService.GetChatMemberIdsAsync(chatId);
 
-		var allConnections = new List<string>();
+		var connectionsToNotify = new List<string>();
 
 		foreach (var memberId in memberIds)
 		{
 			var connections = await connectionManager.GetConnectionsAsync(memberId);
-			allConnections.AddRange(connections);
+			connectionsToNotify.AddRange(connections);
 		}
 
-		await Clients.Clients(allConnections)
+		if (connectionsToNotify.Count == 0) return;
+
+		// Fire 'ReceiveMessage' event to all chat members connections even the caller.
+		await Clients.Clients(connectionsToNotify)
 			 .SendAsync("ReceiveMessage", result.Value);
+	}
+
+	public async Task EditMessage(Guid messageId, EditMessageRequest request)
+	{
+		var userId = GetCurrentUserId();
+		if (userId is null) return;
+
+		var result = await messageService.EditMessageAsync(userId, messageId, request);
+
+		if (!result.IsSuccess)
+		{
+			await Clients.Caller.SendAsync("MessageError", result.Error);
+			return;
+		}
+
+		var connectionsToNotify = new List<string>();
+
+		var chatMemberIds = await chatService.GetChatMemberIdsAsync(result.Value!.ChatId);
+
+		foreach (var chatMemberId in chatMemberIds)
+		{
+			var connections = await connectionManager.GetConnectionsAsync(chatMemberId);
+			connectionsToNotify.AddRange(connections);
+		}
+
+		if (connectionsToNotify.Count == 0) return;
+
+		// Fire 'MessageEdited' event to all members in the chat.
+		await Clients
+			.Clients(connectionsToNotify)
+			.SendAsync("MessageEdited", result.Value);
+
 	}
 
 	public async Task StartTyping(Guid chatId)
@@ -150,19 +184,24 @@ public class ChatHub(
 		var chatMemberIds = await chatService.GetChatMemberIdsAsync(chatId);
 		foreach (var chatMemberId in chatMemberIds)
 		{
-			if (userId == chatMemberId) continue;
+			if (userId == chatMemberId) continue; // Exclude the current user
 
-			var connectionIds = await connectionManager.GetConnectionsAsync(chatMemberId);
-			connectionsToNotify.AddRange(connectionIds);
+			var connections = await connectionManager.GetConnectionsAsync(chatMemberId);
+			connectionsToNotify.AddRange(connections);
 		}
 
 		if (connectionsToNotify.Count == 0) return;
 
+		// Fire 'ChatRead' event to all the chat members connections providing:
+		// 1. ChatId: The chat that has been read
+		// 2. UserId: The user that has read the chat
+		// 3. LastReadAt: The time that this chat has been read by this user
 		await Clients
 			.Clients(connectionsToNotify)
 			.SendAsync("ChatRead", chatId, userId, lastReadAt.Value);
 
 	}
+
 
 	private string? GetCurrentUserId() => Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 

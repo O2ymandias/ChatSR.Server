@@ -133,20 +133,28 @@ public class ChatService(
 
 	public async Task<Result<List<ChatListResponse>>> GetUserChatsAsync(string currentUserId)
 	{
-		// The generated query is to complex, needs to be optimized.
 		var chats = await dbContext.Chats
+			// Get only chats where the current user is a member
 			.Where(c => c.ChatMembers.Any(cm => cm.UserId == currentUserId))
 			.Select(c => new ChatListResponse(
 				c.Id,
+
+				// For group chats use the chat name,
+				// For 1:1 chats use the OTHER member's display name
 				c.IsGroup
 					? c.Name ?? string.Empty
 					: (c.ChatMembers
 						.Where(cm => cm.UserId != currentUserId)
 						.Select(cm => cm.User.DisplayName)
 						.FirstOrDefault()) ?? string.Empty,
+
 				c.IsGroup,
 				c.CreatedAt,
+
+				// Total number of members in this chat
 				c.ChatMembers.Count,
+
+				// Last message preview (take the most recent message only)
 				c.Messages
 					.OrderByDescending(m => m.SentAt)
 					.Select(m => new MessageResponse(
@@ -159,21 +167,27 @@ public class ChatService(
 						m.UserId,
 						m.User.DisplayName,
 						m.User.PictureUrl,
+						// True: at least one member other than the sender has read this message
 						c.ChatMembers.Any(cm =>
-							cm.UserId != m.UserId &&
+							cm.UserId != m.UserId &&    // Exclude the message sender
 							cm.LastReadAt >= m.SentAt
 						)
 					))
 					.FirstOrDefault(),
+
 				c.DisplayPictureUrl,
-				c.Messages.Count(
-					m => m.SentAt > (
+
+				// Count messages sent AFTER the current user's LastReadAt
+				c.Messages.Count(m =>
+					m.UserId != currentUserId &&   // Exclude messages sent by the current user.
+
+					// Message's sentAt > ChatMember's (Current user in this chat) lastReadAt
+					m.SentAt > (
 							c.ChatMembers
-							.Where(cm => cm.UserId == currentUserId)
+							.Where(cm => cm.UserId == currentUserId)    // Find the current user's ChatMember row (always one row)
 							.Select(cm => cm.LastReadAt)
 							.FirstOrDefault() ?? DateTimeOffset.MinValue
-						) &&
-						m.UserId != currentUserId
+						)
 				)
 			))
 			.ToListAsync();
