@@ -10,5 +10,8 @@ public record MessageResponse(
 	string SenderId,
 	string SenderDisplayName,
 	string? SenderPictureUrl,
-	bool IsRead // True if any chatMember(NOT SENDER) has (chatMember.LastReadAt >= message.SentAt) 
+	bool IsRead,
+	ReplyToOverview? ReplyTo
 );
+
+public record ReplyToOverview(Guid MessageId, string Content, string SenderDisplayName);

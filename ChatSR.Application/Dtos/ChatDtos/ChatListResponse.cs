@@ -1,6 +1,4 @@
-﻿using ChatSR.Application.Dtos.MessageDtos;
-
-namespace ChatSR.Application.Dtos.ChatDtos;
+﻿namespace ChatSR.Application.Dtos.ChatDtos;
 
 public record ChatListResponse(
 	Guid ChatId,
@@ -8,7 +6,16 @@ public record ChatListResponse(
 	bool IsGroup,
 	DateTimeOffset CreatedAt,
 	int MemberCount,
-	MessageResponse? LastMessage,
+	LastMessageOverview? LastMessageOverview,
 	string? DisplayPictureUrl,
 	int UnreadCount
+);
+
+public record LastMessageOverview(
+	Guid MessageId,
+	string SenderId,
+	string Content,
+	string SenderDisplayName,
+	DateTimeOffset SentAt,
+	bool IsRead
 );

@@ -64,7 +64,8 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 				SenderId: sender?.Id ?? string.Empty,
 				SenderDisplayName: sender?.DisplayName ?? string.Empty,
 				SenderPictureUrl: sender?.PictureUrl ?? string.Empty,
-				IsRead: false
+				IsRead: false,
+				ReplyTo: null // Edit Later
 			)
 		);
 	}
@@ -125,7 +126,8 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 					cm.ChatId == chatId &&
 					cm.UserId != currentUserId &&
 					cm.LastReadAt >= m.SentAt
-				)
+				),
+				ReplyTo: null // Edit Later
 			))
 			.ToListAsync();
 
@@ -196,7 +198,8 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 					cm.ChatId == message.ChatId &&
 					cm.UserId != message.UserId &&
 					cm.LastReadAt >= message.SentAt
-				)
+				),
+				ReplyTo: null // Edit Later
 			)
 		);
 	}

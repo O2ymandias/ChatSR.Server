@@ -15,4 +15,9 @@ public class Message
 	// One-to-Many: AppUser - Messages
 	public User User { get; set; }
 	public string UserId { get; set; }
+
+	// One-to-Many: Self Relationship
+	public Guid? ReplyToMessageId { get; set; } // Parent Message Id
+	public Message? ReplyToMessage { get; set; } // Parent Message
+	public ICollection<Message> Replies { get; set; } = []; // Children Messages
 }

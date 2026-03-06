@@ -1,6 +1,5 @@
 ﻿using ChatSR.Application.Dtos.ChatDtos;
 using ChatSR.Application.Dtos.ChatMemberDtos;
-using ChatSR.Application.Dtos.MessageDtos;
 using ChatSR.Application.Interfaces;
 using ChatSR.Application.Shared.Errors;
 using ChatSR.Application.Shared.Results;
@@ -157,16 +156,12 @@ public class ChatService(
 				// Last message preview (take the most recent message only)
 				c.Messages
 					.OrderByDescending(m => m.SentAt)
-					.Select(m => new MessageResponse(
+					.Select(m => new LastMessageOverview(
 						m.Id,
-						m.ChatId,
-						m.Content,
-						m.SentAt,
-						m.IsEdited,
-						m.EditedAt,
 						m.UserId,
+						m.Content,
 						m.User.DisplayName,
-						m.User.PictureUrl,
+						m.SentAt,
 						// True: at least one member other than the sender has read this message
 						c.ChatMembers.Any(cm =>
 							cm.UserId != m.UserId &&    // Exclude the message sender
