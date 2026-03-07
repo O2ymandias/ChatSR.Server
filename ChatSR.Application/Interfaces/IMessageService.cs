@@ -5,6 +5,7 @@ namespace ChatSR.Application.Interfaces;
 
 public interface IMessageService
 {
+	Task<MessageResponse?> GetMessageAsync(string currentUserId, Guid chatId, Guid messageId);
 	Task<Result<MessageResponse>> SendMessageAsync(string currentUserId, Guid chatId, SendMessageRequest request);
 	Task<PagedResult<MessageResponse>> GetChatMessagesAsync(string currentUserId, Guid chatId, int page, int pageSize, string? searchTerm);
 	Task<Result<MessageResponse>> EditMessageAsync(string currentUserId, Guid messageId, EditMessageRequest request);

@@ -14,6 +14,35 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 {
 	private const int MaxMessageLength = 2000;
 
+	public async Task<MessageResponse?> GetMessageAsync(string currentUserId, Guid chatId, Guid messageId)
+	{
+		return await dbContext.Messages
+			.Where(m => m.Id == messageId && m.UserId == currentUserId)
+			.Select(m => new MessageResponse(
+				MessageId: m.Id,
+				ChatId: m.ChatId,
+				Content: m.Content,
+				SentAt: m.SentAt,
+				IsEdited: m.IsEdited,
+				EditedAt: m.EditedAt,
+				SenderId: m.User.Id,
+				SenderDisplayName: m.User.DisplayName,
+				SenderPictureUrl: m.User.PictureUrl,
+				IsRead: dbContext.ChatMembers.Any(cm =>
+					cm.ChatId == chatId &&
+					cm.UserId != currentUserId &&
+					cm.LastReadAt >= m.SentAt
+				),
+				ReplyTo: m.ReplyToMessage == null
+					? null
+					: new ReplyToOverview(
+						MessageId: m.ReplyToMessage.Id,
+						Content: m.ReplyToMessage.Content,
+						SenderDisplayName: m.ReplyToMessage.User.DisplayName
+					)
+			)).FirstOrDefaultAsync();
+	}
+
 	public async Task<Result<MessageResponse>> SendMessageAsync(string currentUserId, Guid chatId, SendMessageRequest request)
 	{
 		var content = request.Content.Trim();
@@ -47,27 +76,26 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 			Content = content.Trim()
 		};
 
+		if (request.ReplyTo is not null)
+		{
+			newMessage.ReplyToMessageId = request.ReplyTo;
+		}
+
+
 		dbContext.Messages.Add(newMessage);
 
 		await dbContext.SaveChangesAsync();
 
-		var sender = await dbContext.Users.FindAsync(currentUserId);
+		var createdMessage = await GetMessageAsync(currentUserId, chatId, newMessage.Id);
 
-		return Result<MessageResponse>.Success(
-			new MessageResponse(
-				MessageId: newMessage.Id,
-				ChatId: newMessage.ChatId,
-				Content: newMessage.Content,
-				SentAt: newMessage.SentAt,
-				IsEdited: false,
-				EditedAt: null,
-				SenderId: sender?.Id ?? string.Empty,
-				SenderDisplayName: sender?.DisplayName ?? string.Empty,
-				SenderPictureUrl: sender?.PictureUrl ?? string.Empty,
-				IsRead: false,
-				ReplyTo: null // Edit Later
-			)
-		);
+		if (createdMessage is null)
+		{
+			return Result<MessageResponse>.Failure(
+				Error.Validation("Message was sent, but an error occurred while retrieving it.")
+			);
+		}
+
+		return Result<MessageResponse>.Success(createdMessage);
 	}
 
 	public async Task<PagedResult<MessageResponse>> GetChatMessagesAsync(string currentUserId, Guid chatId, int page, int pageSize, string? searchTerm)
@@ -105,6 +133,7 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 		}
 
 		var messages = await dbContext.Messages
+			.Include(m => m.ReplyToMessage)
 			.Where(m =>
 				m.ChatId == chatId &&
 				(string.IsNullOrEmpty(searchTerm) || m.Content.Contains(searchTerm))
@@ -127,7 +156,13 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 					cm.UserId != currentUserId &&
 					cm.LastReadAt >= m.SentAt
 				),
-				ReplyTo: null // Edit Later
+				ReplyTo: m.ReplyToMessage == null
+					? null
+					: new ReplyToOverview(
+						m.ReplyToMessage.Id,
+						m.ReplyToMessage.Content,
+						m.ReplyToMessage.User.DisplayName
+					)
 			))
 			.ToListAsync();
 
@@ -183,25 +218,16 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 
 		await dbContext.SaveChangesAsync();
 
-		return Result<MessageResponse>.Success(
-			new MessageResponse(
-				MessageId: message.Id,
-				ChatId: message.ChatId,
-				Content: message.Content,
-				SentAt: message.SentAt,
-				IsEdited: message.IsEdited,
-				EditedAt: message.EditedAt,
-				SenderId: message.User.Id,
-				SenderDisplayName: message.User.DisplayName,
-				SenderPictureUrl: message.User.PictureUrl,
-				IsRead: dbContext.ChatMembers.Any(cm =>
-					cm.ChatId == message.ChatId &&
-					cm.UserId != message.UserId &&
-					cm.LastReadAt >= message.SentAt
-				),
-				ReplyTo: null // Edit Later
-			)
-		);
+		var editedMessage = await GetMessageAsync(currentUserId, message.ChatId, message.Id);
+
+		if (editedMessage is null)
+		{
+			return Result<MessageResponse>.Failure(
+				Error.Validation("Message was edited, but an error occurred while retrieving it.")
+			);
+		}
+
+		return Result<MessageResponse>.Success(editedMessage);
 	}
 
 	public async Task<Result<bool>> DeleteMessageAsync(string currentUserId, Guid messageId)
@@ -240,4 +266,6 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 
 		return Result<bool>.Success(true);
 	}
+
+
 }

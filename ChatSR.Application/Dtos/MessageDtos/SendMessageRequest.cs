@@ -8,4 +8,7 @@ public record SendMessageRequest
 	[MinLength(1)]
 	[MaxLength(2000)]
 	public string Content { get; init; }
+
+
+	public Guid? ReplyTo { get; set; }
 }
