@@ -33,7 +33,7 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 					cm.UserId != currentUserId &&
 					cm.LastReadAt >= m.SentAt
 				),
-				ReplyTo: m.ReplyToMessage == null
+				ReplyToOverview: m.ReplyToMessage == null
 					? null
 					: new ReplyToOverview(
 						MessageId: m.ReplyToMessage.Id,
@@ -76,9 +76,9 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 			Content = content.Trim()
 		};
 
-		if (request.ReplyTo is not null)
+		if (request.ReplyToMessageId is not null)
 		{
-			newMessage.ReplyToMessageId = request.ReplyTo;
+			newMessage.ReplyToMessageId = request.ReplyToMessageId;
 		}
 
 
@@ -156,7 +156,7 @@ public class MessageService(AppDbContext dbContext, IChatService chatService) : 
 					cm.UserId != currentUserId &&
 					cm.LastReadAt >= m.SentAt
 				),
-				ReplyTo: m.ReplyToMessage == null
+				ReplyToOverview: m.ReplyToMessage == null
 					? null
 					: new ReplyToOverview(
 						m.ReplyToMessage.Id,

@@ -11,7 +11,7 @@ public record MessageResponse(
 	string SenderDisplayName,
 	string? SenderPictureUrl,
 	bool IsRead,
-	ReplyToOverview? ReplyTo
+	ReplyToOverview? ReplyToOverview
 );
 
 public record ReplyToOverview(Guid MessageId, string Content, string SenderDisplayName);

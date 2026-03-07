@@ -10,5 +10,5 @@ public record SendMessageRequest
 	public string Content { get; init; }
 
 
-	public Guid? ReplyTo { get; set; }
+	public Guid? ReplyToMessageId { get; set; }
 }
